@@ -14,14 +14,6 @@ knitr::opts_chunk$set(
 )
 
 theme_set(theme_minimal() + theme(legend.position = "bottom"))
-
-options(
-  ggplot2.continuous.colour = "viridis",
-  ggplot2.continuous.fill = "viridis"
-)
-
-scale_colour_discrete = scale_colour_viridis_d
-scale_fill_discrete = scale_fill_viridis_d
 ```
 
 ## Problem 1
@@ -163,4 +155,65 @@ PLA_CIC_df = filter(instacart, product_name == "Pink Lady Apples" | product_name
 PLA_CIC_df        
 ```
 
+## Problem 2
+I will now load and clean data from the "Behavioral Risk Factors Surveillance System (BRFSS) for Selected Metropolitan Area Risk Trends (SMART) for 2002-2010".
+
+```{r, collapse = TRUE}
+data("brfss_smart2010")
+brfss_smart2010_df = force(brfss_smart2010) %>% 
+ janitor::clean_names() %>% 
+  rename(state_abbrev = locationabbr) %>%
+  rename(state_w_county = locationdesc) %>% 
+  rename(response_id = respid) %>% 
+  rename(lat_long = geo_location) %>% 
+  filter(topic == "Overall Health") %>% 
+  filter(response == "Poor" | response == "Fair" | response == "Good" | 
+           response == "Very good" | response == "Excellent") %>% 
+  mutate(response = forcats::fct_relevel(response, c("Poor", "Fair", "Good",
+                                                     "Very good", "Excellent")))
+```
+
+I will now show how many states had 7 or more locations in 2002 and 2010.
+```{r, collapse = TRUE}
+brfss_smart2010_df %>% 
+  filter(year == 2002) %>% 
+  count(state_abbrev, sort = TRUE) %>% 
+  filter(n >= 7)
+
+brfss_smart2010_df %>% 
+  filter(year == 2010) %>% 
+  count(state_abbrev, sort = TRUE) %>% 
+  filter(n >= 7)
+```
+
+In 2002, there were 36 states with 7 or more locations. In 2010, there were 45 states
+with 7 or more locations.
+
+I will now construct a dataset limited to "Excellent" responses, contains year, state,
+and a variable that averages the data value across locations within a state.
+
+I will then make a "spaghetti" plot of the average data value over time within a state.
+```{r, collapse = TRUE}
+brfss_smart2010_df %>% 
+  select(year, state_abbrev, state_w_county, response, data_value) %>% 
+  filter(response == "Excellent") %>% 
+  group_by(year, state_abbrev) %>% 
+  mutate(mean_data_value = mean(data_value)) %>% 
+  ggplot(aes(x = year, y = mean_data_value)) +
+  geom_line(aes(color = state_abbrev)) +
+  theme(legend.text = element_text(size = 8), legend.spacing.x = unit(0.05, 'cm'), 
+        legend.position = 'right') +
+   xlab("Year") + ylab("Mean Data Value") +
+  scale_colour_discrete(name = "State Abbreviation")
+```
+
+I will make a two panel plot showing, for years 2006 and 2010, the distribution of
+data_value for responses "Poor" to "Excellent" among locations in NY state.
+
+```{r, collapse = TRUE}
+ny_2006_df = select(brfss_smart2010_df, year, state_abbrev, state_w_county, response, data_value) %>% 
+  filter(state_abbrev == "NY", year == 2006) %>% 
+  ggplot(aes(x = factor(response), y = data_value)) +
+  geom_line(aes(color = state_w_county))
+```
 

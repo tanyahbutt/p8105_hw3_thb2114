@@ -193,3 +193,104 @@ PLA_CIC_df
 |:-----------------|---------:|---------:|---------:|----------:|---------:|---------:|---------:|
 | Coffee Ice Cream | 13.77419 | 14.31579 | 15.38095 |  15.31818 | 15.21739 | 12.26316 | 13.83333 |
 | Pink Lady Apples | 13.44118 | 11.36000 | 11.70213 |  14.25000 | 11.55172 | 12.78431 | 11.93750 |
+
+## Problem 2
+
+I will now load and clean data from the “Behavioral Risk Factors
+Surveillance System (BRFSS) for Selected Metropolitan Area Risk Trends
+(SMART) for 2002-2010”.
+
+``` r
+data("brfss_smart2010")
+brfss_smart2010_df = force(brfss_smart2010) %>% 
+ janitor::clean_names() %>% 
+  rename(state_abbrev = locationabbr) %>%
+  rename(state_w_county = locationdesc) %>% 
+  rename(response_id = respid) %>% 
+  rename(lat_long = geo_location) %>% 
+  filter(topic == "Overall Health") %>% 
+  filter(response == "Poor" | response == "Fair" | response == "Good" | 
+           response == "Very good" | response == "Excellent") %>% 
+  mutate(response = forcats::fct_relevel(response, c("Poor", "Fair", "Good",
+                                                     "Very good", "Excellent")))
+```
+
+I will now show how many states had 7 or more locations in 2002 and
+2010.
+
+``` r
+brfss_smart2010_df %>% 
+  filter(year == 2002) %>% 
+  count(state_abbrev, sort = TRUE) %>% 
+  filter(n >= 7)
+## # A tibble: 36 × 2
+##    state_abbrev     n
+##    <chr>        <int>
+##  1 PA              50
+##  2 MA              40
+##  3 NJ              40
+##  4 CT              35
+##  5 FL              35
+##  6 NC              35
+##  7 MD              30
+##  8 NH              25
+##  9 NY              25
+## 10 UT              25
+## # … with 26 more rows
+brfss_smart2010_df %>% 
+  filter(year == 2010) %>% 
+  count(state_abbrev, sort = TRUE) %>% 
+  filter(n >= 7)
+## # A tibble: 45 × 2
+##    state_abbrev     n
+##    <chr>        <int>
+##  1 FL             205
+##  2 NJ              95
+##  3 TX              80
+##  4 CA              60
+##  5 MD              60
+##  6 NC              60
+##  7 NE              50
+##  8 WA              50
+##  9 MA              45
+## 10 NY              45
+## # … with 35 more rows
+```
+
+In 2002, there were 36 states with 7 or more locations. In 2010, there
+were 45 states with 7 or more locations.
+
+I will now construct a dataset limited to “Excellent” responses,
+contains year, state, and a variable that averages the data value across
+locations within a state.
+
+I will then make a “spaghetti” plot of the average data value over time
+within a state.
+
+``` r
+brfss_smart2010_df %>% 
+  select(year, state_abbrev, state_w_county, response, data_value) %>% 
+  filter(response == "Excellent") %>% 
+  group_by(year, state_abbrev) %>% 
+  mutate(mean_data_value = mean(data_value)) %>% 
+  ggplot(aes(x = year, y = mean_data_value)) +
+  geom_line(aes(color = state_abbrev)) +
+  theme(legend.text = element_text(size = 8), legend.spacing.x = unit(0.05, 'cm'), 
+        legend.position = 'right') +
+   xlab("Year") + ylab("Mean Data Value") +
+  scale_colour_discrete(name = "State Abbreviation")
+## Warning: Removed 65 row(s) containing missing values (geom_path).
+```
+
+<img src="hw3_files/figure-gfm/unnamed-chunk-11-1.png" width="90%" />
+
+I will make a two panel plot showing, for years 2006 and 2010, the
+distribution of data\_value for responses “Poor” to “Excellent” among
+locations in NY state.
+
+``` r
+ny_2006_df = select(brfss_smart2010_df, year, state_abbrev, state_w_county, response, data_value) %>% 
+  filter(state_abbrev == "NY", year == 2006) %>% 
+  ggplot(aes(x = factor(response), y = data_value)) +
+  geom_line(aes(color = state_w_county))
+```
