@@ -289,8 +289,18 @@ distribution of data\_value for responses “Poor” to “Excellent” among
 locations in NY state.
 
 ``` r
-ny_2006_df = select(brfss_smart2010_df, year, state_abbrev, state_w_county, response, data_value) %>% 
-  filter(state_abbrev == "NY", year == 2006) %>% 
-  ggplot(aes(x = factor(response), y = data_value)) +
-  geom_line(aes(color = state_w_county))
+ny_2006_2010_df = select(brfss_smart2010_df, year, state_abbrev, state_w_county, response, data_value) %>% 
+  filter(state_abbrev == "NY", year == 2006 | year == 2010)
+
+ggplot(ny_2006_2010_df, aes(x = response, y = data_value, color = state_w_county)) +
+  geom_point() +
+  facet_grid(. ~ year) +
+  labs(
+    title = "2006 and 2010 Data Values for Responses among NY Locations",
+    x = "Response Type",
+    y = "Data Value",
+    caption =  "Data from Instacart"
+  )
 ```
+
+<img src="hw3_files/figure-gfm/unnamed-chunk-12-1.png" width="90%" />
