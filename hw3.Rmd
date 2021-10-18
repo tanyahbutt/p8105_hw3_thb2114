@@ -5,8 +5,162 @@ output: github_document
 
 ```{r, echo = FALSE, message = FALSE}
 library(tidyverse)
-library(readxl)
 library(lubridate)
+library(p8105.datasets)
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%"
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
 ```
 
 ## Problem 1
+First, I will load the the Instacart data from the p8105.datasets library and evaluate its contents.
+
+```{r, eval = FALSE}
+data("instacart")
+force(instacart)
+instacart %>% 
+  count(user_id)
+```
+
+The Instacart data is an online grocery shopping dataset from 2017. It includes the following
+`r ncol(instacart)` variables: `r names(instacart)`. 
+
+The data has `r nrow(instacart)` observations. Each row is a product from a single order from `r n_distinct(pull(instacart, user_id))` unique individuals.
+
+I will now produce some graphs using the Instacart data. 
+
+```{r, collapse = TRUE}
+instacart %>% 
+  count(department, name = "department_id") %>% 
+  ggplot(aes(x = department, y = department_id)) +
+  geom_point() +
+  labs(
+    title = "Number of Products Ordered by Department ",
+    x = "Department",
+    y = "Number of Prodcuts Ordered",
+    caption =  "Data from Instacart"
+  ) +
+  theme(axis.text.x = element_text(angle = 90)) +
+  scale_y_continuous(labels = scales::comma)
+```
+
+The departments most frequently ordered from in this dataset set are "produce" and "dairy eggs".
+
+```{r, collapse = TRUE}
+instacart %>% 
+  group_by(department, product_name) %>% 
+  summarize(n_obs = n()) %>% 
+  filter(n_obs > 5000) %>% 
+  ggplot(aes(x = product_name, y = n_obs)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(
+    title = "Top 10 Products Ordered in the Instacart Dataset",
+    x = "Product Name",
+    y = "Number of Prodcuts Ordered",
+    caption =  "Data from Instacart"
+  ) +
+  theme(axis.text.x = element_text(angle = 90)) +
+  scale_y_continuous(
+    breaks = c(0, 5000, 10000, 15000, 20000),
+    labels = c("0", "5,000", "10,000", "15,000", "20,000")) +
+  scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 10))
+
+```
+
+The top 10 most frequently ordered products in the Instacart dataset are bags of organic bananas, bananas, large lemons, limes, organic avocados, organic baby spinach, organic Has avocados, organic raspberries, organic strawberries, and strawberries.
+ 
+```{r, collapse = TRUE}
+n_distinct(pull(instacart, aisle_id))
+
+instacart %>% 
+  count(aisle_id, aisle, sort = TRUE)
+```
+
+In the Instacart dataset, the number of aisles are `r n_distinct(pull(instacart, aisle_id))` and the aisles most ordered from are the 'fresh vegetables' and 'fresh fruits' aisle.
+
+Below is a bar graph of the number of items ordered in aisles with > 10,000 items ordered. 'Fresh vegetables' and 'fresh fruits' had the highest number of orders in this dataset.
+
+```{r}
+instacart %>% 
+  count(aisle_id, aisle, sort = TRUE) %>% 
+  filter(n > 10000) %>% 
+  ggplot(aes(x = aisle, y = n)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(
+    title = "Number of Products Ordered",
+    x = "Aisle Name",
+    y = "Number of Prodcuts Ordered",
+    caption =  "Data from Instacart"
+  ) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1.05, size = 8)) +
+  scale_y_continuous(
+    breaks = c(0, 10000, 20000, 40000, 60000, 80000, 100000, 120000, 140000, 160000),
+    labels = c("0", "10,000", "20,000", "40,000", "60,000", "80,000", "100,000", "120,000", "140,000", "160,000")) 
+```
+
+I will now make a table showing the three most popular items in each of the aisles, "baking ingredients", "dog food care",  and "packaged vegetable fruits." I will include the number of times each item is ordered in the table.
+
+```{r, collapse = TRUE}
+baking_df = filter(instacart, aisle == "baking ingredients") %>% 
+  group_by(aisle_id, aisle, product_name) %>% 
+  count(product_name, sort = TRUE) %>% 
+  filter(product_name == "Light Brown Sugar" | product_name == "Pure Baking Soda" |
+         product_name == "Cane Sugar") 
+  
+
+dogfood_df = filter(instacart, aisle == "dog food care") %>% 
+  group_by(aisle_id, aisle, product_name) %>% 
+  count(product_name, sort = TRUE) %>% 
+  filter(product_name == "Snack Sticks Chicken & Rice Recipe Dog Treats" | product_name == "Organix Chicken & Brown Rice Recipe" | product_name == "Small Dog Biscuits")
+
+package_vege_fruit_df = filter(instacart, aisle == "packaged vegetables fruits") %>% 
+  group_by(aisle_id, aisle, product_name) %>% 
+  count(product_name, sort = TRUE) %>% 
+  filter(product_name == "Organic Baby Spinach" | product_name == "Organic Raspberries" |
+           product_name == "Organic Blueberries")
+
+package_baking_df = full_join(package_vege_fruit_df, baking_df, by = NULL) 
+baking_dogfood_package_df = full_join(package_baking_df, dogfood_df, by = NULL) %>% 
+  rename("Aisle ID Number" = aisle_id) %>% 
+  rename("Name of Product" = product_name) %>% 
+  rename("Number of Times Ordered" = n) %>% 
+  rename("Aisle Name" = aisle) %>% 
+   knitr::kable()
+
+baking_dogfood_package_df
+```
+
+I will now make a table showing the mean hour of the day at which Pink Lady Apples and Coffee 
+Ice Cream are ordered on each day of the week.
+
+```{r, collapse = TRUE}
+PLA_CIC_df = filter(instacart, product_name == "Pink Lady Apples" | product_name == "Coffee Ice Cream") %>% 
+  group_by(product_name, order_dow) %>% 
+  summarize(mean_order_hour = mean(order_hour_of_day)) %>% 
+  rename("Name of Product" = product_name) %>% 
+  rename("Mean Order Hour" = mean_order_hour) %>%
+  mutate(order_dow = factor(c("0" = "Sunday", "1" = "Monday", "2" = "Tuesday",
+                              "3" = "Wednesday", "4" = "Thursday", "5" = "Friday",
+                              "6" = "Saturday"))) %>% 
+  pivot_wider(
+    names_from = "order_dow",
+    values_from = "Mean Order Hour"
+  ) %>% 
+  knitr::kable()
+  
+PLA_CIC_df        
+```
+
+
