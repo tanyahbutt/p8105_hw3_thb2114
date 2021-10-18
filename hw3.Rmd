@@ -7,6 +7,7 @@ output: github_document
 library(tidyverse)
 library(lubridate)
 library(p8105.datasets)
+library(readxl)
 knitr::opts_chunk$set(
   fig.width = 6,
   fig.asp = .6,
@@ -222,6 +223,27 @@ ggplot(ny_2006_2010_df, aes(x = response, y = data_value, color = state_w_county
     x = "Response Type",
     y = "Data Value",
     caption =  "Data from Instacart"
-  )
+  ) +
+  scale_colour_discrete(name = "State and County")
 ```
 
+## Problem 3
+
+First, I will load and tidy the accelerometer data.
+
+```{r, collapse = TRUE}
+accel_data_df = read_csv("data/accel_data.csv") %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    day_type = case_when(
+      day == "Monday" | day == "Tuesday" | day == "Wednesday" | day == "Thursday" |
+        day == "Friday" ~ "weekday",
+      day == "Sunday" | day == "Saturday" ~ "weekend",
+      TRUE ~ ""))  
+
+```
+
+# mutate(day, factor(day), levels = c("Monday" = "Monday", "Tuesday" = "Tuesday",
+#                                      "Wednesday" = "Wednesday","Thursday" = 
+#                                      "Thursday", "Friday" = "Friday", 
+#                                     "Saturday" = "Saturday", "Sunday" = "Sunday"))

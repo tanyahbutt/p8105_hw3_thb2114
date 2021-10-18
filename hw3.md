@@ -300,7 +300,39 @@ ggplot(ny_2006_2010_df, aes(x = response, y = data_value, color = state_w_county
     x = "Response Type",
     y = "Data Value",
     caption =  "Data from Instacart"
-  )
+  ) +
+  scale_colour_discrete(name = "State and County")
 ```
 
 <img src="hw3_files/figure-gfm/unnamed-chunk-12-1.png" width="90%" />
+
+## Problem 3
+
+First, I will load and tidy the accelerometer data.
+
+``` r
+accel_data_df = read_csv("data/accel_data.csv") %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    day_type = case_when(
+      day == "Monday" | day == "Tuesday" | day == "Wednesday" | day == "Thursday" |
+        day == "Friday" ~ "weekday",
+      day == "Sunday" | day == "Saturday" ~ "weekend",
+      TRUE ~ ""))  
+## Rows: 35 Columns: 1443
+## ── Column specification ────────────────────────────────────────────────────────
+## Delimiter: ","
+## chr    (1): day
+## dbl (1442): week, day_id, activity.1, activity.2, activity.3, activity.4, ac...
+## 
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+```
+
+# mutate(day, factor(day), levels = c(“Monday” = “Monday”, “Tuesday” = “Tuesday”,
+
+# “Wednesday” = “Wednesday”,“Thursday” =
+
+# “Thursday”, “Friday” = “Friday”,
+
+# “Saturday” = “Saturday”, “Sunday” = “Sunday”))
