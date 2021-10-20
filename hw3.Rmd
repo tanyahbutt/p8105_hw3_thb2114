@@ -18,7 +18,8 @@ theme_set(theme_minimal() + theme(legend.position = "bottom"))
 ```
 
 ## Problem 1
-First, I will load the the Instacart data from the p8105.datasets library and evaluate its contents.
+First, I will load the the Instacart data from the p8105.datasets library and
+evaluate its contents.
 
 ```{r, eval = FALSE}
 data("instacart")
@@ -27,10 +28,11 @@ instacart %>%
   count(user_id)
 ```
 
-The Instacart data is an online grocery shopping dataset from 2017. It includes the following
-`r ncol(instacart)` variables: `r names(instacart)`. 
+The Instacart data is an online grocery shopping dataset from 2017. It includes
+the following `r ncol(instacart)` variables: `r names(instacart)`. 
 
-The data has `r nrow(instacart)` observations. Each row is a product from a single order from `r n_distinct(pull(instacart, user_id))` unique individuals.
+The data has `r nrow(instacart)` observations. Each row is a product from a 
+single order from `r n_distinct(pull(instacart, user_id))` unique individuals.
 
 I will now produce some graphs using the Instacart data. 
 
@@ -49,7 +51,8 @@ instacart %>%
   scale_y_continuous(labels = scales::comma)
 ```
 
-The departments most frequently ordered from in this dataset set are "produce" and "dairy eggs".
+The departments most frequently ordered from in this dataset set are "produce"
+and "dairy eggs".
 
 ```{r, collapse = TRUE}
 instacart %>% 
@@ -72,7 +75,10 @@ instacart %>%
 
 ```
 
-The top 10 most frequently ordered products in the Instacart dataset are bags of organic bananas, bananas, large lemons, limes, organic avocados, organic baby spinach, organic Has avocados, organic raspberries, organic strawberries, and strawberries.
+The top 10 most frequently ordered products in the Instacart dataset are bags 
+of organic bananas, bananas, large lemons, limes, organic avocados, organic 
+baby spinach, organic Has avocados, organic raspberries, organic strawberries,
+and strawberries.
  
 ```{r, collapse = TRUE}
 n_distinct(pull(instacart, aisle_id))
@@ -81,9 +87,11 @@ instacart %>%
   count(aisle_id, aisle, sort = TRUE)
 ```
 
-In the Instacart dataset, the number of aisles are `r n_distinct(pull(instacart, aisle_id))` and the aisles most ordered from are the 'fresh vegetables' and 'fresh fruits' aisle.
+In the Instacart dataset, the number of aisles are `r n_distinct(pull(instacart,aisle_id))` and the aisles most ordered from are the 'fresh vegetables' and 'fresh fruits'
+aisle.
 
-Below is a bar graph of the number of items ordered in aisles with > 10,000 items ordered. 'Fresh vegetables' and 'fresh fruits' had the highest number of orders in this dataset.
+Below is a bar graph of the number of items ordered in aisles with > 10,000 
+items ordered. 
 
 ```{r}
 instacart %>% 
@@ -99,47 +107,69 @@ instacart %>%
   ) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1.05, size = 8)) +
   scale_y_continuous(
-    breaks = c(0, 10000, 20000, 40000, 60000, 80000, 100000, 120000, 140000, 160000),
-    labels = c("0", "10,000", "20,000", "40,000", "60,000", "80,000", "100,000", "120,000", "140,000", "160,000")) 
+    breaks = c(0, 10000, 20000, 40000, 60000, 80000, 100000, 120000, 140000,
+               160000),
+    labels = c("0", "10,000", "20,000", "40,000", "60,000", "80,000", "100,000", 
+               "120,000", "140,000", "160,000")) 
 ```
 
-I will now make a table showing the three most popular items in each of the aisles, "baking ingredients", "dog food care",  and "packaged vegetable fruits." I will include the number of times each item is ordered in the table.
+'Fresh vegetables' and 'fresh fruits' had the highest number 
+of orders in this dataset.
+
+Below I will create a table with the three most popular items in each of the 
+aisles, "baking ingredients", "dog food care",  and "packaged vegetable fruits." 
+I will include the number of times each item is ordered in the table.
 
 ```{r, collapse = TRUE}
 baking_df = filter(instacart, aisle == "baking ingredients") %>% 
-  group_by(aisle_id, aisle, product_name) %>% 
+  group_by(aisle, product_name) %>% 
   count(product_name, sort = TRUE) %>% 
   filter(product_name == "Light Brown Sugar" | product_name == "Pure Baking Soda" |
          product_name == "Cane Sugar") 
-  
 
 dogfood_df = filter(instacart, aisle == "dog food care") %>% 
-  group_by(aisle_id, aisle, product_name) %>% 
+  group_by(aisle, product_name) %>% 
   count(product_name, sort = TRUE) %>% 
-  filter(product_name == "Snack Sticks Chicken & Rice Recipe Dog Treats" | product_name == "Organix Chicken & Brown Rice Recipe" | product_name == "Small Dog Biscuits")
+  filter(product_name == "Snack Sticks Chicken & Rice Recipe Dog Treats" | 
+           product_name == "Organix Chicken & Brown Rice Recipe" | product_name
+         == "Small Dog Biscuits")
 
 package_vege_fruit_df = filter(instacart, aisle == "packaged vegetables fruits") %>% 
-  group_by(aisle_id, aisle, product_name) %>% 
+  group_by(aisle, product_name) %>% 
   count(product_name, sort = TRUE) %>% 
   filter(product_name == "Organic Baby Spinach" | product_name == "Organic Raspberries" |
            product_name == "Organic Blueberries")
 
 package_baking_df = full_join(package_vege_fruit_df, baking_df, by = NULL) 
-baking_dogfood_package_df = full_join(package_baking_df, dogfood_df, by = NULL) %>% 
-  rename("Aisle ID Number" = aisle_id) %>% 
-  rename("Name of Product" = product_name) %>% 
-  rename("Number of Times Ordered" = n) %>% 
-  rename("Aisle Name" = aisle) %>% 
+
+baking_dogfood_package_df = full_join(package_baking_df, dogfood_df, by = NULL) %>%
+  group_by(aisle) %>% 
+  mutate(n, rank = min_rank(desc(n))) %>%
+  mutate(product_order_num = paste(product_name,"- number of orders:", n)) 
+
+table_df = select(baking_dogfood_package_df, rank, product_order_num, aisle) %>% 
+  pivot_wider(
+    names_from = aisle,
+    values_from = product_order_num) %>% 
+  rename("Rank" = rank) %>% 
+  rename("Packaged Vegetables and Fruits" = `packaged vegetables fruits`) %>% 
+  rename("Baking Ingredients" = `baking ingredients`) %>% 
+  rename("Dog Food and Care" = `dog food care`) %>% 
    knitr::kable()
 
-baking_dogfood_package_df
+table_df
 ```
 
-I will now make a table showing the mean hour of the day at which Pink Lady Apples and Coffee 
-Ice Cream are ordered on each day of the week.
+The most ordered items in the "Packaged Vegetables and Fruits", "Baking 
+Ingredients", and "Dog Food and Care" aisles are: organic baby spinach, 
+light brown sugar, and Snack Sticks Chicken and Rice Recipe Dog Treats.
+
+In the following code, I am creating a table to show the mean hour of the day 
+at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week.
 
 ```{r, collapse = TRUE}
-PLA_CIC_df = filter(instacart, product_name == "Pink Lady Apples" | product_name == "Coffee Ice Cream") %>% 
+PLA_CIC_df = filter(instacart, product_name == "Pink Lady Apples" | product_name
+                    == "Coffee Ice Cream") %>% 
   group_by(product_name, order_dow) %>% 
   summarize(mean_order_hour = mean(order_hour_of_day)) %>% 
   rename("Name of Product" = product_name) %>% 
@@ -156,8 +186,12 @@ PLA_CIC_df = filter(instacart, product_name == "Pink Lady Apples" | product_name
 PLA_CIC_df        
 ```
 
+Based on the table, it looks like Pink Lady Apples tend to be ordered earlier 
+in the day compared to Coffee Ice Cream.
+
 ## Problem 2
-I will now load and clean data from the "Behavioral Risk Factors Surveillance System (BRFSS) for Selected Metropolitan Area Risk Trends (SMART) for 2002-2010".
+I will load and clean data from the "Behavioral Risk Factors Surveillance 
+System (BRFSS) for Selected Metropolitan Area Risk Trends (SMART) for 2002-2010".
 
 ```{r, collapse = TRUE}
 data("brfss_smart2010")
@@ -175,6 +209,7 @@ brfss_smart2010_df = force(brfss_smart2010) %>%
 ```
 
 I will now show how many states had 7 or more locations in 2002 and 2010.
+
 ```{r, collapse = TRUE}
 brfss_smart2010_df %>% 
   filter(year == 2002) %>% 
@@ -187,13 +222,16 @@ brfss_smart2010_df %>%
   filter(n >= 7)
 ```
 
-In 2002, there were 36 states with 7 or more locations. In 2010, there were 45 states
+In 2002, there were 36 states with 7 or more locations. In 2010, there were 45
+states
 with 7 or more locations.
 
-I will now construct a dataset limited to "Excellent" responses, contains year, state,
-and a variable that averages the data value across locations within a state.
+I will now construct a dataset limited to "Excellent" responses, contains year,
+state, and a variable that averages the data value across locations within a state.
 
-I will then make a "spaghetti" plot of the average data value over time within a state.
+I will then make a "spaghetti" plot of the average data value over time within 
+a state.
+
 ```{r, collapse = TRUE}
 brfss_smart2010_df %>% 
   select(year, state_abbrev, state_w_county, response, data_value) %>% 
@@ -208,14 +246,20 @@ brfss_smart2010_df %>%
   scale_colour_discrete(name = "State Abbreviation")
 ```
 
-I will make a two panel plot showing, for years 2006 and 2010, the distribution of
-data_value for responses "Poor" to "Excellent" among locations in NY state.
+Overall, it looks like mean data values for all the states included in the 
+'spaghetti' plot fluctuated between 11.5 and 29.5 from 2002 and 2010.
+
+I will now make a two panel plot showing, for years 2006 and 2010, the
+distribution of data values for responses "Poor" to "Excellent" among locations
+in NY state.
 
 ```{r, collapse = TRUE}
-ny_2006_2010_df = select(brfss_smart2010_df, year, state_abbrev, state_w_county, response, data_value) %>% 
+ny_2006_2010_df = select(brfss_smart2010_df, year, state_abbrev, state_w_county, 
+                         response, data_value) %>% 
   filter(state_abbrev == "NY", year == 2006 | year == 2010)
 
-ggplot(ny_2006_2010_df, aes(x = response, y = data_value, color = state_w_county)) +
+ggplot(ny_2006_2010_df, aes(x = response, y = data_value, 
+                            color = state_w_county)) +
   geom_point() +
   facet_grid(. ~ year) +
   labs(
@@ -224,8 +268,13 @@ ggplot(ny_2006_2010_df, aes(x = response, y = data_value, color = state_w_county
     y = "Data Value",
     caption =  "Data from Instacart"
   ) +
-  scale_colour_discrete(name = "State and County")
+  theme(legend.title = element_blank(), legend.text = element_text(size = 5))
 ```
+
+In 2006 and 2010, the response type "Poor" had the lowest data value and was 
+from Weschester County. In 2010, the response type "Very good" 
+had the highest data value and was also from Weschester County. For 2006, the
+response type with the highest data value was "Good" and from Queens County.
 
 ## Problem 3
 
@@ -236,14 +285,31 @@ accel_data_df = read_csv("data/accel_data.csv") %>%
   janitor::clean_names() %>% 
   mutate(
     day_type = case_when(
-      day == "Monday" | day == "Tuesday" | day == "Wednesday" | day == "Thursday" |
+      day == "Monday" | day == "Tuesday" | day == "Wednesday" | 
+        day == "Thursday" |
         day == "Friday" ~ "weekday",
       day == "Sunday" | day == "Saturday" ~ "weekend",
-      TRUE ~ ""))  
-
+      TRUE ~ ""))  %>%
+  mutate(day = as.factor(day)) 
 ```
 
-# mutate(day, factor(day), levels = c("Monday" = "Monday", "Tuesday" = "Tuesday",
-#                                      "Wednesday" = "Wednesday","Thursday" = 
-#                                      "Thursday", "Friday" = "Friday", 
-#                                     "Saturday" = "Saturday", "Sunday" = "Sunday"))
+I will now create a table focusing on the total activity over the day. I will 
+create a total activity variable for each day, and then create a table with 
+these totals.
+
+```{r, collapse = TRUE}
+accel_data_table =
+  pivot_longer(
+    accel_data_df,
+    activity_1:activity_1440,
+    names_to = "activity",
+    values_to = "activity_num") %>% 
+  group_by(day) %>% 
+  summarize(total_activity = sum(activity_num)) %>% 
+  mutate(total_activity, rank = min_rank(desc(total_activity))) 
+
+  
+
+accel_data_table
+```
+
