@@ -266,9 +266,8 @@ ggplot(ny_2006_2010_df, aes(x = response, y = data_value,
     title = "2006 and 2010 Data Values for Responses among NY Locations",
     x = "Response Type",
     y = "Data Value",
-    caption =  "Data from Instacart"
-  ) +
-  theme(legend.title = element_blank(), legend.text = element_text(size = 5))
+    caption =  "Data from Instacart") +
+  theme(legend.title = element_blank(), legend.text = element_text(size = 7))
 ```
 
 In 2006 and 2010, the response type "Poor" had the lowest data value and was 
@@ -290,7 +289,11 @@ accel_data_df = read_csv("data/accel_data.csv") %>%
         day == "Friday" ~ "weekday",
       day == "Sunday" | day == "Saturday" ~ "weekend",
       TRUE ~ ""))  %>%
-  mutate(day = as.factor(day)) 
+  mutate(day = as.factor(day)) %>% 
+  pivot_longer(
+    activity_1:activity_1440,
+    names_to = "activity",
+    values_to = "activity_num")
 ```
 
 I will now create a table focusing on the total activity over the day. I will 
@@ -298,18 +301,29 @@ create a total activity variable for each day, and then create a table with
 these totals.
 
 ```{r, collapse = TRUE}
-accel_data_table =
-  pivot_longer(
-    accel_data_df,
-    activity_1:activity_1440,
-    names_to = "activity",
-    values_to = "activity_num") %>% 
-  group_by(day) %>% 
+accel_data_table = group_by(accel_data_df, day) %>% 
   summarize(total_activity = sum(activity_num)) %>% 
-  mutate(total_activity, rank = min_rank(desc(total_activity))) 
-
+  mutate(total_activity, rank = min_rank(desc(total_activity))) %>% 
+  arrange(desc(rank)) %>% 
+  select(day,total_activity) %>% 
+  rename("Day of the Week" = day) %>% 
+  rename("Total Activity" = total_activity) %>% 
+  knitr::kable()
   
-
 accel_data_table
+```
+
+It appears like total activity is lower on the weekends and the earlier days of 
+the week compared with the later days in the week. Total activity also appears
+to peak on Fridays.
+
+I will now make a single panel plot that shows the 24-hour activity time courses
+for each day and will use color to indicate day of the week.
+
+```{r}
+accel_data_df %>% 
+  mutate(activity = )
+  
+  
 ```
 
