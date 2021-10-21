@@ -433,7 +433,7 @@ accel_data_plot = group_by(accel_data_df, day) %>%
     values_to = "activity_number") 
 
 ggplot(accel_data_plot, aes(x = Hour, y = activity_number, color = day)) +
-  geom_point() + 
+  geom_line(aes(group = day)) + geom_point() + 
   labs(
     title = "24 Hour Accelerometer Activity By Day of the Week",
     x = "Hour",
