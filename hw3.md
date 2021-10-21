@@ -347,7 +347,11 @@ accel_data_df = read_csv("data/accel_data.csv") %>%
         day == "Friday" ~ "weekday",
       day == "Sunday" | day == "Saturday" ~ "weekend",
       TRUE ~ ""))  %>%
-  mutate(day = as.factor(day)) 
+  mutate(day = as.factor(day)) %>% 
+  pivot_longer(
+    activity_1:activity_1440,
+    names_to = "activity",
+    values_to = "activity_number")
 ## Rows: 35 Columns: 1443
 ## ── Column specification ────────────────────────────────────────────────────────
 ## Delimiter: ","
@@ -363,14 +367,8 @@ will create a total activity variable for each day, and then create a
 table with these totals.
 
 ``` r
-accel_data_table =
-  pivot_longer(
-    accel_data_df,
-    activity_1:activity_1440,
-    names_to = "activity",
-    values_to = "activity_num") %>% 
-  group_by(day) %>% 
-  summarize(total_activity = sum(activity_num)) %>% 
+accel_data_table = group_by(accel_data_df, day) %>% 
+  summarize(total_activity = sum(activity_number)) %>% 
   mutate(total_activity, rank = min_rank(desc(total_activity))) %>% 
   arrange(desc(rank)) %>% 
   select(day,total_activity) %>% 
@@ -399,45 +397,5 @@ I will now make a single panel plot that shows the 24-hour activity time
 courses for each day and will use color to indicate day of the week.
 
 ``` r
-accel_data_hours =
-  mutate(accel_data_df, hour_1 = sum(c_across(activity_1:activity_60))) %>% 
-  mutate(hour_2 = sum(c_across(activity_60:activity_120))) %>% 
-  mutate(hour_3 = sum(c_across(activity_120:activity_180))) %>% 
-  mutate(hour_4 = sum(c_across(activity_180:activity_240))) %>% 
-  mutate(hour_5 = sum(c_across(activity_240:activity_300))) %>% 
-  mutate(hour_6 = sum(c_across(activity_300:activity_360))) %>% 
-  mutate(hour_7 = sum(c_across(activity_360:activity_420))) %>% 
-  mutate(hour_8 = sum(c_across(activity_420:activity_480))) %>% 
-  mutate(hour_9 = sum(c_across(activity_480:activity_540))) %>% 
-  mutate(hour_10 = sum(c_across(activity_540:activity_600))) %>% 
-  mutate(hour_11 = sum(c_across(activity_600:activity_660))) %>% 
-  mutate(hour_12 = sum(c_across(activity_660:activity_720))) %>% 
-  mutate(hour_13 = sum(c_across(activity_720:activity_780))) %>% 
-  mutate(hour_14 = sum(c_across(activity_780:activity_840))) %>% 
-  mutate(hour_15 = sum(c_across(activity_840:activity_900))) %>% 
-  mutate(hour_16 = sum(c_across(activity_900:activity_960))) %>% 
-  mutate(hour_17 = sum(c_across(activity_960:activity_1020))) %>% 
-  mutate(hour_18 = sum(c_across(activity_1020:activity_1080))) %>% 
-  mutate(hour_19 = sum(c_across(activity_1080:activity_1140))) %>% 
-  mutate(hour_20 = sum(c_across(activity_1140:activity_1200))) %>% 
-  mutate(hour_21 = sum(c_across(activity_1200:activity_1260))) %>% 
-  mutate(hour_22 = sum(c_across(activity_1260:activity_1320))) %>% 
-  mutate(hour_23 = sum(c_across(activity_1320:activity_1380))) %>% 
-  mutate(hour_24 = sum(c_across(activity_1380:activity_1440))) %>% 
-  pivot_longer(
-    hour_1:hour_24,
-    names_to = "activity",
-    values_to = "activity_num") %>% 
-  group_by(week,day) %>% 
-  select(week, day, activity, activity_num) 
-
-ggplot(accel_data_hours, aes(x = activity, y = activity_num, color = day)) + 
-  geom_line() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1.05, size = 8)) +
-  scale_y_continuous(
-    breaks = c(0, 100000, 200000, 400000, 600000, 800000, 1000000, 1200000),
-    labels = c("0", "100,000", "200,000", "400,000", "600,000", "800,000", 
-               "1,000,000", "1,200,000")) 
+accel_data_plot = mutate(accel_data_df, sub("activity_","", activity))
 ```
-
-<img src="hw3_files/figure-gfm/unnamed-chunk-15-1.png" width="90%" />
