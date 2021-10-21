@@ -434,8 +434,8 @@ accel_data_plot = group_by(accel_data_df, day) %>%
   mutate(Hour = as.factor(Hour))
 
 ggplot(accel_data_plot, aes(x = Hour, y = activity_number, color = day)) +
-  geom_line() +
-  geom_point() +
+  geom_line(stat = "identity") +
+  geom_point(stat = "identity") +
   labs(
     title = "24 Hour Accelerometer Activity By Day of the Week",
     x = "Hour",
@@ -445,8 +445,8 @@ ggplot(accel_data_plot, aes(x = Hour, y = activity_number, color = day)) +
   theme(legend.title = element_blank(), legend.text = element_text(size = 7), 
         axis.text.x = element_text(angle = 90)) +
   scale_y_continuous(
-    breaks = c(5000, 25000, 50000, 100000, 200000, 300000),
-    labels = c("5,000","25,000", "50,000", "100,000", "200,000", "300,000")) 
+    breaks = c(0, 50000, 100000, 200000, 300000),
+    labels = c("0","50,000", "100,000", "200,000", "300,000")) 
 ```
 
 <img src="hw3_files/figure-gfm/unnamed-chunk-15-1.png" width="90%" />
