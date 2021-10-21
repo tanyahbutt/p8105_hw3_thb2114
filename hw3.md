@@ -430,12 +430,10 @@ accel_data_plot = group_by(accel_data_df, day) %>%
   pivot_longer(
     'Hour 1':'Hour 24',
     names_to = "Hour",
-    values_to = "activity_number") %>% 
-  mutate(Hour = as.factor(Hour))
+    values_to = "activity_number") 
 
 ggplot(accel_data_plot, aes(x = Hour, y = activity_number, color = day)) +
-  geom_line(stat = "identity") +
-  geom_point(stat = "identity") +
+  geom_point() + 
   labs(
     title = "24 Hour Accelerometer Activity By Day of the Week",
     x = "Hour",
@@ -445,8 +443,20 @@ ggplot(accel_data_plot, aes(x = Hour, y = activity_number, color = day)) +
   theme(legend.title = element_blank(), legend.text = element_text(size = 7), 
         axis.text.x = element_text(angle = 90)) +
   scale_y_continuous(
-    breaks = c(0, 50000, 100000, 200000, 300000),
-    labels = c("0","50,000", "100,000", "200,000", "300,000")) 
+    breaks = c(0, 50000, 100000, 150000, 200000, 250000, 300000),
+    labels = c("0","50,000", "100,000", "150,000", "200,000", "250,000",
+    "300,000")) +
+  scale_x_discrete(limits = c('Hour 1', 'Hour 2', 'Hour 3', 'Hour 4', 'Hour 5',
+                              'Hour 6', 'Hour 7', 'Hour 8', 'Hour 9', 'Hour 10',
+                              'Hour 11', 'Hour 12', 'Hour 13', 'Hour 14', 
+                              'Hour 15', 'Hour 16', 'Hour 17', 'Hour 18',
+                              'Hour 19', 'Hour 20', 'Hour 21', 'Hour 22',
+                              'Hour 23', 'Hour 24')) 
 ```
 
 <img src="hw3_files/figure-gfm/unnamed-chunk-15-1.png" width="90%" />
+
+Overall, accelerometer activity tends to be lowest at the earliest hours
+of the day. Activity tends to peak between hours 10-13 and hours 20-22.
+Sunday at hour 12 has the highest activity amount, followed by Friday at
+hours 21 and 22.
