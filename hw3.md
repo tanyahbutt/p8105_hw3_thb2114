@@ -397,5 +397,56 @@ I will now make a single panel plot that shows the 24-hour activity time
 courses for each day and will use color to indicate day of the week.
 
 ``` r
-accel_data_plot = mutate(accel_data_df, sub("activity_","", activity))
+accel_data_plot = group_by(accel_data_df, day) %>% 
+ pivot_wider(
+   names_from = "activity",
+   values_from = "activity_number") %>% 
+  mutate('Hour 1' = sum(c_across(activity_1:activity_60)),
+         'Hour 2' = sum(c_across(activity_60:activity_120)),
+         'Hour 3' = sum(c_across(activity_120:activity_180)),
+         'Hour 4' = sum(c_across(activity_180:activity_240)),
+         'Hour 5' = sum(c_across(activity_240:activity_300)),
+         'Hour 6' = sum(c_across(activity_300:activity_360)),
+         'Hour 7' = sum(c_across(activity_360:activity_420)),
+         'Hour 8' = sum(c_across(activity_420:activity_480)),
+         'Hour 9' = sum(c_across(activity_480:activity_520)),
+         'Hour 10' = sum(c_across(activity_520:activity_580)),
+         'Hour 11' = sum(c_across(activity_580:activity_640)),
+         'Hour 12' = sum(c_across(activity_640:activity_720)),
+         'Hour 13' = sum(c_across(activity_720:activity_780)),
+         'Hour 14' = sum(c_across(activity_780:activity_840)),
+         'Hour 15' = sum(c_across(activity_840:activity_900)),
+         'Hour 16' = sum(c_across(activity_900:activity_960)),
+         'Hour 17' = sum(c_across(activity_960:activity_1020)),
+         'Hour 18' = sum(c_across(activity_1020:activity_1080)),
+         'Hour 19' = sum(c_across(activity_1080:activity_1140)),
+         'Hour 20' = sum(c_across(activity_1140:activity_1200)),
+         'Hour 21' = sum(c_across(activity_1200:activity_1260)),
+         'Hour 22' = sum(c_across(activity_1260:activity_1320)),
+         'Hour 23' = sum(c_across(activity_1320:activity_1380)),
+         'Hour 24' = sum(c_across(activity_1380:activity_1440)),
+         ) %>% 
+  select(day,'Hour 1':'Hour 24') %>% 
+  pivot_longer(
+    'Hour 1':'Hour 24',
+    names_to = "Hour",
+    values_to = "activity_number") %>% 
+  mutate(Hour = as.factor(Hour))
+
+ggplot(accel_data_plot, aes(x = Hour, y = activity_number, color = day)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "24 Hour Accelerometer Activity By Day of the Week",
+    x = "Hour",
+    y = "Activity Amount",
+    caption =  "Data from the Advanced Cardiac Care Center, 
+    Columbia University Medical Center") +
+  theme(legend.title = element_blank(), legend.text = element_text(size = 7), 
+        axis.text.x = element_text(angle = 90)) +
+  scale_y_continuous(
+    breaks = c(5000, 25000, 50000, 100000, 200000, 300000),
+    labels = c("5,000","25,000", "50,000", "100,000", "200,000", "300,000")) 
 ```
+
+<img src="hw3_files/figure-gfm/unnamed-chunk-15-1.png" width="90%" />
